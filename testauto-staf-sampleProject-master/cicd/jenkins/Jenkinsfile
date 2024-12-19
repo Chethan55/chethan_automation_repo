@@ -1,0 +1,511 @@
+/*
+ Library declaration.
+  Notes:
+  identifier includes the version of the library (git tag / branch)
+  remote includes the repository git url
+  credentialsId needs to be of the type SSH key in Jenkins
+  _ at the end of the declaration loads the whole library
+  This section always runs in the master jenkins.
+*/
+// 
+library(
+    identifier: 'jsl-jenkins-shared-library@stable',
+    retriever: modernSCM(
+        [
+            $class: 'GitSCMSource',
+            remote: 'https://github.com/CenturyLink/jsl-jenkins-shared-library.git',
+            credentialsId: 'SCMAUTO_GITHUB',
+            extensions: [[$class: 'WipeWorkspace']]
+        ]
+    )
+) _
+pipeline {
+
+    environment {
+
+      /*
+        Credentials:
+        GITHUB_TOKEN_CREDENTIALS github token, jenkins user password credential
+        GITHUB_SSH_CREDENTIALS github ssh private key, jenkins private key credential.
+        DOCKER_CREDENTIALS Docker access info, jenkins secret file credential with environment variables to export
+        KUBE_CREDENTIALS Kubernetes access info, jenkins secret file credential with environment variables to export. For PRs.
+        KUBE_CREDENTIALS_TEST Kubernetes access info, jenkins secret file credential with environment variables to export. For branches.
+        AMAZON_CREDENTIALS AWS access info, jenkins secret file credential with environment variables to export
+        SONARQUBE_CREDENTIALS Sonarqube access info, jenkins secret text
+        GCP_CREDENTIALS GCP access info, jenkins secret file credential with environment variables to export
+        JIRA_CREDENTIALS Jira access info, jenkins secret file credential with environment variables to export
+        MSTEAMS_CREADENTIALS MS Teams access info, jenkins secret text
+      */
+      GITHUB_TOKEN_CREDENTIALS = 'GITHUB_APP_CREDENTIALS'
+      GITHUB_SSH_CREDENTIALS = 'SCMAUTO_SSH_DEVOPS_PIPELINE'
+      DOCKER_CREDENTIALS = 'nexus-secrets'
+      KUBE_CREDENTIALS = 'kube-secret-dev'
+      // KUBE_CREDENTIALS_DEV = 'kube-secret-dev'
+      KUBE_CREDENTIALS_TEST = 'kube-secret-test'
+      // KUBE_CREDENTIALS_PROD = 'kube-secret-test' /*'kube-secret-prod'*/
+      //SONARQUBE_CREDENTIALS = 'sonar-secrets'
+      SONARQUBE_CREDENTIALS = 'sonarscnprod'
+      QUALITY_GATE_CREDENTIALS = 'qualitygate-secret'
+      JIRA_CREDENTIALS = 'jira-credentials'
+      XRAY_CREDENTIALS = 'xray-credentials'    
+      JIRA_SERVER_INSTANCE_ID = 'CLOUD-482e318d-9fc6-4be6-9089-2646e78fcac3' // Update for Dev Unifed : 'CLOUD-66c37195-7903-495a-94c3-259f15e1e3a8'
+      JIRA_TESTAUTO_CREDENTIALS = 'JIRA_CREDENTIALS_TESTAUTO' //'Jira-testauto-credentials'
+      XRAY_TESTAUTO_ID_SECRET = 'JIRA_XRAY_IDSECRET_TESTAUTO' //'xray-testauto'
+      AMAZON_CREDENTIALS = ''
+      GCP_CREDENTIALS = ''
+      //JIRA_AUTO_CREDENTIALS = 'Jira-Xray-Key'
+      //MSTEAMS_CREDENTIALS = 'teams-secret'
+      TAG = '${env.NODE_NAME}'
+	  
+	  //Deployment control credentialsId
+      AUTHORIZED_USERS = 'authorized_users'
+      DEPLOY_AUTH_TOKEN = 'deploy_auth_token'
+
+	    
+
+      // Custom project variables
+      
+      
+      // Custom project variables
+      BRANCH_NAME = GIT_BRANCH.split('/')[-1].trim().toLowerCase()
+      COMMIT_ID = GIT_COMMIT.substring(0,7).trim().toLowerCase()
+      PULL_REQUEST="pr-${env.CHANGE_ID}"
+      PROJECT_NAME = 'PROJECT'
+      PROJECT_MAL  = "DEVOPS-QGATE"
+      DOCKER_REPO ='PROJECT_REPO'
+      IMAGE_NAME = "${env.PROJECT_NAME}"
+      IMAGE_TAG =  "${env.PULL_REQUEST}"
+      KUBE_DOCKER_SECRET_NAME = "${env.PROJECT_NAME}-${env.PULL_REQUEST}"
+      KUBE_DOCKER_SECRET_NAME_TEST = "${env.PROJECT_NAME}-${env.BRANCH_NAME}"
+      
+      
+      
+    }
+
+    parameters {
+      //      https://www.jenkins.io/doc/book/pipeline/syntax/#parameters
+      choice(name: 'Environment', choices: ['Test1', 'Test2'], description: '')
+      choice(name: 'TestType', choices: ['Sanity'], description: '')
+      choice(name: 'MAL', choices: ['ESHOP'], description: '')
+      choice(name: 'TestTool', choices: ['STAF'], description: '')
+      string(name: 'ProjectKey', defaultValue: 'XIS', description: '')
+
+    }
+
+    /*
+    https://www.jenkins.io/doc/book/pipeline/syntax/#agent
+    Add agent sections in stages/stage if needed.
+    */
+    agent {
+      label 'Docker-enabled'
+    }
+
+    options {
+      /*
+      https://www.jenkins.io/doc/book/pipeline/syntax/#options
+      */
+      timestamps ()
+      timeout(time: 1, unit: 'HOURS')
+      buildDiscarder(logRotator(numToKeepStr:'3', daysToKeepStr: '5'))
+      disableConcurrentBuilds()
+    }
+
+    /*
+    https://www.jenkins.io/doc/book/pipeline/syntax/#triggers
+    */
+    triggers {
+     // pollSCM('*/5 * * * *')
+      issueCommentTrigger('.*test this please.*')
+     
+    }
+
+    stages {
+        stage('Dev code') {
+            stages {
+                stage('Static Code Analysis') {
+                    parallel {
+                        stage('Linting') {
+                            agent none
+                            steps {
+                                script{
+                                    println "Linting"
+                                }
+                            }
+                        }
+
+                        stage('DevSecOps'){
+                            steps {
+                                script {
+                                    println "DevSecOps"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('build'){
+                    agent none
+                    steps {
+                        script {
+                            println "build"
+                        }
+                    }
+                }
+
+                stage('Create images'){
+                    agent none
+                    steps {
+                        script {
+                            println "Create images"
+                        }
+                    }
+                }
+
+                stage('Test') {
+                    stages {
+                        stage('Unit Tests'){
+                            agent none
+                            steps {
+                                script {
+                                    println "Unit Tests"
+                                }
+                            }
+                        }
+
+                        stage('Coverage'){
+                            steps {
+                                script {
+                                    println "Coverage"
+                                }
+                            }
+                        }
+
+                        stage('Sonarqube'){
+                            agent none
+                            steps {
+                                script {
+                                    println "Sonarqube"
+                                }
+                            }
+                        }
+
+                        stage('Quality Gate 1'){
+                            agent none
+                            steps {
+                                script {
+                                    println "Quality Gate"
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('Deploy'){
+                    agent none
+                    steps {
+                        script {
+                            println "Deploy"
+                        }
+                    }
+                }
+            }
+
+        }
+
+        stage('Quality Gate 2') {
+            /*agent {
+                    dockerfile {
+                     	filename 'Dockerfile'
+                     	dir 'cicd/docker/selenium'
+             	    	label 'Docker-enabled'
+                    }
+               }*/
+               agent {
+                    docker {
+                        image 'nexusprod.corp.intranet:4567/testauto-staf/staf:4.0.0'
+                        label 'Docker-enabled'
+                    }
+                }
+            stages {
+                       stage('Sanity Tests') {
+                         steps {
+                            
+                                   script {
+          			        try {
+              				sh 'cd SampleTools && mvn clean install -ntp'
+				            sh "cd SampleTests && mvn clean verify serenity:aggregate -Dcucumber.features='src/test/resources/features' -Dcucumber.filter.tags='@Sample' -Dcucumber.plugin=\"json:target/cucumber-reports/cucumberReport.json,junit:target/cucumber-reports/cucumberReport.xml\" -Dstaf.mal.key=DEVOPS-QGATE -Dstaf.testtype.key=Sanity -Dstaf.environment.key=TEST1 -Denvironment=linux-chrome -Dwebdriver.timeouts.implicitlywait=40000 -ntp"
+             				sh 'mkdir -p qareports && cp SampleTests/target/cucumber-reports/** qareports/'
+					stash name: 'qareports' , includes: 'qareports/**'
+					stash name: 'result', includes: 'SampleTests/target/cucumber-reports/cucumberReport.xml'
+     				        stash name: 'htmlresult', includes: 'SampleTests/target/report/Report.html'
+       				        }catch (Exception e) {
+       					   println "Tests executed but failed. Check the logs, login is working." 
+           			        }
+                   	           }
+			    
+                         }
+		      }	
+
+                stage('Functional Tests'){
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Functional Tests"
+                        }
+                    }
+                }
+
+                stage('Regression Tests'){
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Regression Tests"
+                        }
+                    }
+                }
+		    
+		        stage('Publish Cucumber Results'){
+                    steps {
+                        println "jslPublishCucumberReport"
+                        unstash 'htmlresult'
+                        unstash 'qareports'
+                        jslPublishCucumberReport('qareports/cucumberReport.json', 'Sanity')
+                        jslPublishHTMLTestResults('Report.html',"SampleTests/target/report/", 'Sanity STAF HTML Report')
+                            
+                    }
+                }
+
+                stage('Jira Result Import'){
+                    steps {
+                        println "jslJiraXrayResultImport"
+                        unstash 'qareports'
+                        jslJiraXrayResultImport('cucumber', 'qareports/cucumberReport.json', 'This execution is automatically created when importing execution results from jenkins','STAF', 'XIS', "XIS-22893", 'Test1')
+                    }
+                }
+
+                stage('Tests Result Email Notification'){
+                    steps {
+                        println "jslEmailNotification"
+                        unstash 'htmlresult'
+                        jslEmailNotification('bindya.s.bangera@lumen.com', 'bindya.s.bangera@lumen.com', 'Job Name:${JOB_NAME} BuildNo:${BUILD_NUMBER} BuildStatus:${BUILD_STATUS}', 'SampleTests/target/report/Report.html,SampleTests/target/report/*.png', '''${FILE,path="SampleTests/target/report/Report.html"} Build Url : ${BUILD_URL}''', 'text/html')	
+                    }
+                }
+
+                
+            }
+        }
+        stage('Quality Gate 2 Validation'){
+                agent {
+                    docker {
+                        image 'nexusprod.corp.intranet:4567/jsl-docker-standard-images/jira_agent:latest'
+                        label 'Docker-enabled'
+                    }
+                }
+                    steps {
+                        script {
+                                unstash 'qareports'
+                		jslCheckQualityGates("qareports/cucumberReport.xml","QualityGate2-Sanity","JUnit")
+	       		 //    jslCheckQualityGates("qareports/Cucumber-Regression.xml","QualityGate2-Regression","JUnit")
+	       			//sh 'rm -r qareports'
+                        }
+                    }
+                }
+
+        stage('Quality Gate 3') {
+           agent none
+            stages {
+                stage('Sanity Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Sanity Tests"
+                        }
+                    }
+                }
+
+                stage('Inter-application​ Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Inter-application​ Tests"
+                        }
+                    }
+                }
+
+                stage('Quality Gate'){
+                    agent none
+                    steps {
+                        script {
+                            println "Quality Gate"
+                        }
+                    }
+                }
+            }
+        }
+	    
+        stage('Quality Gate 4') {
+           
+            stages {
+                stage('Sanity Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Sanity Tests"
+                        }
+                    }
+                }
+
+                stage('Solution Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Solution Tests"
+                        }
+                    }
+                }
+
+       
+
+               
+            }
+        }
+
+       stage('Quality Gate 5') {
+            agent none
+            stages {
+                stage('UAT Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "UAT Tests"
+                        }
+                    }
+                }
+
+                stage('Quality Gate'){
+                    agent none
+                    steps {
+                        script {
+                            println "Quality Gate"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate 6') {
+            agent none
+            stages {
+                stage('Production Verification') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Production Verification Activities"
+                        }
+                    }
+                }
+
+                stage('Quality Gate'){
+                    agent none
+                    steps {
+                        script {
+                            println "Quality Gate"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate 7') {
+            agent none
+            stages {
+                stage('Production validation​ Tests') {
+                    when {
+                        expression {
+                            currentBuild.currentResult == 'SUCCESS'
+                        }
+                    }
+                    steps {
+                        script {
+                            println "Production validation​ Tests"
+                        }
+                    }
+                }
+
+                stage('Quality Gate'){
+                    agent none
+                    steps {
+                        script {
+                            println "Quality Gate"
+                        }
+                    }
+                }
+            }
+        }
+	    
+	stage('Adoption Stats') {
+            agent {
+                docker {
+                    image 'nexusprod.corp.intranet:4567/jsl-docker-standard-images/jira_agent:latest'
+                    label 'Docker-enabled'
+                }
+            }
+            steps {
+                script {
+                    
+		        jslAdoptionMain()
+                    
+                }
+            }
+        }
+}
+  post {
+     always{ 
+	
+	    cleanWs()
+     }
+     success {
+        /* Contract Validation Gate */
+       // jslNotification('success')
+        cleanWs()
+      }
+      failure {
+        /* Contract Validation Gate */
+      //  jslNotification('failure')
+        cleanWs()
+      }
+    }
+}
+

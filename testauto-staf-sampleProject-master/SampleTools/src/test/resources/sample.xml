@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<container name="root">
+	<container name="Environments">
+		<container name="TEST1">
+			<field name="url" value="http://usodcwvdnptl01.corp.intranet:8001/home/"
+				type="mandatory"></field>
+		</container>
+		<container name="TEST2">
+		</container>
+		<container name="TEST3">
+		</container>
+		<container name="TEST4">
+			<field name="url"
+				value="https://webdmzpt1.centurylink.com/small-business/"
+				type="mandatory"></field>
+			<field name="sso-console"
+				value="https://ctl--itv1.my.salesforce.com/"></field>
+			<container name="LoginPage">
+				<container name="KarafToolLogin">
+					<field name="tbx_user_name" value="AD07234" type="mandatory" />
+					<field name="tbx_password" value="Asdfghjkl331991*" type="mandatory" />
+				</container>
+			</container>
+		</container>
+		<container name="PROD">
+		</container>
+	</container>
+	<container name="CommonData">
+		<container name="CompleteOrderPage">
+			<field name="tbx_email_address"
+				value="sohaib.farooqi@centurylink.com" type="mandatory"></field>
+			<field name="tbx_company_name" value="Centurylink"
+				type="mandatory"></field>
+			<field name="tbx_first_name" value="sohaib" type="mandatory"></field>
+			<field name="tbx_last_name" value="farooqi" type="mandatory"></field>
+			<field name="tbx_contact_phone_number" value="4029987725"
+				type="mandatory"></field>
+			<field name="ddl_type_of_ownership" value="Sole Proprietor"
+				type="mandatory"></field>
+			<field name="cbx_terms_and_conditions" value="ON"
+				type="mandatory"></field>
+			<field name="btn_place_my_order_securely" value=""
+				type="mandatory"></field>
+		</container>
+	</container>
+</container> 
