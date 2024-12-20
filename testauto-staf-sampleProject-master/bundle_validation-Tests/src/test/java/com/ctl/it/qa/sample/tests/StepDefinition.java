@@ -20,35 +20,35 @@ public class StepDefinition {
 	@Steps
 	UserSteps userSteps;
 	
-//	@Before
-//	public void beforeEveryScenario(Scenario scenario) {
-//		Serenity.setSessionVariable("file_type").to(scenario.getName());
-//	}
-//	
-//	@BeforeStep
-//	public void beforeStep(Scenario scn) throws Exception {
-//		userSteps.captureScenarioSteps(scn);
-//	}
-//	
-//	@After
-//	public void afterEveryScenario(Scenario scenario) {
-//		try {
-//			com.ctl.it.qa.staf.Steps.isInitialized = false;
-//			Page.isInitialized = false;
-//			scenario.log("Data used for this test case:" + "\r\n");
-//			if (scenario.isFailed()) {
-//				byte[] screenshot = ((TakesScreenshot) userSteps.getDriver()).getScreenshotAs(OutputType.BYTES);
-//				scenario.attach(screenshot, "image/png","scenario");
-//			}
-//		}catch(Exception e) {
-//			
-//		}finally {
-//			userSteps.captureTestResult(scenario);
-//			userSteps.getDriver().close();
-//			userSteps.getDriver().quit();
-//			
-//		}	
-//	  }
+	@Before
+	public void beforeEveryScenario(Scenario scenario) {
+		Serenity.setSessionVariable("file_type").to(scenario.getName());
+	}
+	
+	@BeforeStep
+	public void beforeStep(Scenario scn) throws Exception {
+		userSteps.captureScenarioSteps(scn);
+	}
+	
+	@After
+	public void afterEveryScenario(Scenario scenario) {
+		try {
+			com.ctl.it.qa.staf.Steps.isInitialized = false;
+			Page.isInitialized = false;
+			scenario.log("Data used for this test case:" + "\r\n");
+			if (scenario.isFailed()) {
+				byte[] screenshot = ((TakesScreenshot) userSteps.getDriver()).getScreenshotAs(OutputType.BYTES);
+				scenario.attach(screenshot, "image/png","scenario");
+			}
+		}catch(Exception e) {
+			
+		}finally {
+			userSteps.captureTestResult(scenario);
+			userSteps.getDriver().close();
+			userSteps.getDriver().quit();
+			
+		}	
+	  }
 	@Steps
 	bundle_validation steps;
 	

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <container name="root">
 	<container name="Environments">
-		<container name="TEST1">
+		<container name="PRODUCTION">
 			<field name="url" value="http://usodcwvdnptl01.corp.intranet:8001/home/"
 				type="mandatory"></field>
 		</container>

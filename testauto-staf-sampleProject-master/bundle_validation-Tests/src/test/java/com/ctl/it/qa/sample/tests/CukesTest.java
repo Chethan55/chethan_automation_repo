@@ -16,7 +16,7 @@ import io.cucumber.junit.CucumberOptions;
 
 
 
-@TestEnvironment(Environment.TEST1) // Test Environment on which execution is to happen is provided
+@TestEnvironment(Environment.PRODUCTION) // Test Environment on which execution is to happen is provided
 @RunWith(CucumberWithSerenity.class)
 @CucumberOptions(features = "src/test/resources/features/", tags = "@DSP_bundles")
 public class CukesTest {
