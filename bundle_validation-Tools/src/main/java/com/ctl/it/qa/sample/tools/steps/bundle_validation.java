@@ -60,6 +60,8 @@ public class bundle_validation extends LumenSteps{
 
 	        Select s = new Select(dropdownElement);
 	        s.selectByValue(app_name);
+
+		System.out.println(app_name);
 	        Thread.sleep(2000);
 		
 	}
