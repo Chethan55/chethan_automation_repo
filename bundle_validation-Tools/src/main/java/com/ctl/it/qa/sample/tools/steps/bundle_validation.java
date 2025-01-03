@@ -41,7 +41,7 @@ public class bundle_validation extends LumenSteps{
 		//String pass = envData.getFieldValue("tbx_password");
 		
 		actions.user_name.sendKeys("AD07234");
-		actions.pass.sendKeys("Qwertyuiop331991*");
+		actions.pass.sendKeys("Poiuytrewq331991*");
 		
 		Thread.sleep(2000);
 		
